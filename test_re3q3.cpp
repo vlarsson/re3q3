@@ -1,5 +1,5 @@
 #include <Eigen/Dense>
-#include <re3q3/re3q3.h>
+#include <re3q3.h>
 #include <iostream>
 #include <time.h>
 
