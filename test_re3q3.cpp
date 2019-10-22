@@ -7,8 +7,8 @@
 #define REQUIRE(COND) if(!(COND)) { std::cout << "Failure: "#COND" was not satisfied.\n"; return false; }
 
 
-bool verify_solutions(Eigen::Matrix<double, 3, 10> coeffs,
-					Eigen::Matrix<double, 3, 8> solution,
+bool verify_solutions(const Eigen::Matrix<double, 3, 10> &coeffs,
+					const Eigen::Matrix<double, 3, 8> &solution,
 					int n_sol, double tol) {
 
 	Eigen::Matrix<double, 10, 1> mons;
@@ -107,18 +107,23 @@ bool test_pure_squares() {
 	coeffs(2, 5) = 1.0;
 	coeffs(2, 9) = -1.0;
 
+	int ok = 0;
+	for(int test = 0; test < 1000; ++test) {
+		int n_sols = re3q3(coeffs, &solutions);
 
-	int n_sols = re3q3(coeffs, &solutions);
+		REQUIRE(n_sols == 8);
 
-	REQUIRE(n_sols == 8);
+		if(verify_solutions(coeffs, solutions, n_sols, 1e-8))
+			++ok;
+	}
 
-	return verify_solutions(coeffs, solutions, n_sols, 1e-8);
+	return ok > 950; // require 95% successrate at least
 }
 
 
 int main() {
 	
-	unsigned int seed = (unsigned int)time(0);		
+	unsigned int seed = (unsigned int)time(0);	
 	srand(seed);
 
 	std::cout << "Running tests... (seed = " << seed << ")\n\n";

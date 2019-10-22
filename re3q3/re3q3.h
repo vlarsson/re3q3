@@ -38,7 +38,8 @@ int re3q3(Eigen::Matrix<double, 3, 10> coeffs, Eigen::Matrix<double, 3, 8> *solu
     
     if(try_random_var_change && det < 1e-10) {
         Eigen::Matrix<double,3,4> A;
-        A.setRandom();
+        A.block<3,3>(0,0) = Eigen::Quaternion<double>::UnitRandom().toRotationMatrix();
+        A.block<3,1>(0,3).setRandom().normalize();
         
         Eigen::Matrix<double,10,10> B;
         B << A(0,0)*A(0,0), 2*A(0,0)*A(0,1), 2*A(0,0)*A(0,2), A(0,1)*A(0,1), 2*A(0,1)*A(0,2), A(0,2)*A(0,2), 2*A(0,0)*A(0,3), 2*A(0,1)*A(0,3), 2*A(0,2)*A(0,3), A(0,3)*A(0,3),
