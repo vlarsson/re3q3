@@ -18,4 +18,4 @@ target_compile_options(test_re3q3 PRIVATE -Wall -Werror)
 
 add_executable(test_p4pf test_p4pf.cpp examples/p4pf.cpp)
 target_link_libraries(test_p4pf re3q3)
-target_compile_options(test_p4pf PRIVATE -Wall -Werror)
+target_compile_options(test_p4pf PRIVATE -Wall -Werror -Wno-sign-compare)

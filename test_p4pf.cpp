@@ -114,7 +114,4 @@ int main() {
 	TEST(test_p4pf_multiple_trials);
 
 	std::cout << "\nDone! Passed " << passed << "/" << num_tests << " tests.\n";
-
-	int i;
-	std::cin >> i;
 }
