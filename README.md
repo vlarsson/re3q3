@@ -5,8 +5,5 @@ The function takes a 3x10 matrix corresponding to the coefficients of the three 
 > x^2, xy, xz, y^2, yz, z^2, x, y, z, 1.0;
 
 There is also a mex-interface for matlab in re3q3_mex.cpp which can be compiled by running
-> mex('-I/usr/include/eigen3','re3q3_mex.cpp')
+> mex('-Id:\work\thirdparty\eigen\','re3q3_mex.cc','re3q3/re3q3.cc','re3q3/sturm8.cc')
 
-TODO:
-* Replace companion matrix solver with sturm-sequences or similar root-bracketing method
-* Add more examples.

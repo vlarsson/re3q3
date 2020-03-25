@@ -7,11 +7,19 @@ endif()
 
 find_package (Eigen3 REQUIRED NO_MODULE)
 
-add_library(re3q3 INTERFACE)
-target_include_directories(re3q3 INTERFACE re3q3)
-target_link_libraries(re3q3 INTERFACE Eigen3::Eigen)
-target_compile_features(re3q3 INTERFACE cxx_std_14)
+add_library(re3q3 STATIC 
+	re3q3/re3q3.cc
+	re3q3/sturm8.cc
+)
+target_link_libraries(re3q3 Eigen3::Eigen)
 
-add_executable(test_re3q3 test_re3q3.cpp)
-target_link_libraries(test_re3q3 re3q3)
-target_compile_options(test_re3q3 PRIVATE -Wall -Werror)
+add_executable(test_re3q3 test_re3q3.cc)
+target_link_libraries(test_re3q3 re3q3 Eigen3::Eigen)
+
+if(MSVC)	
+	target_compile_options(re3q3 PRIVATE /bigobj /fp:fast)
+	target_compile_options(test_re3q3 PRIVATE /bigobj /fp:fast)
+else()
+	target_compile_options(re3q3 PRIVATE -march=native -Wall -Werror -Wno-sign-compare -Wno-unused-variable -ffast-math)
+	target_compile_options(test_re3q3 PRIVATE -march=native -Wall -Werror -Wno-sign-compare -Wno-unused-variable -ffast-math)
+endif()
