@@ -35,7 +35,7 @@ void mexFunction(int nlhs,mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		// we are solving a single instance, output is 3xNsols
 		coeffs = Eigen::Map<Eigen::Matrix<double, 3, 10>>(data);
 
-		int n_sols = re3q3(coeffs, &solutions);
+		int n_sols = re3q3::re3q3(coeffs, &solutions);
 		plhs[0] = mxCreateDoubleMatrix(3, n_sols, mxREAL);
 
 		Eigen::Map<Eigen::MatrixXd> output_matrix = Eigen::Map<Eigen::MatrixXd>(mxGetPr(plhs[0]), 3, n_sols);
@@ -51,7 +51,7 @@ void mexFunction(int nlhs,mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		for (int i = 0; i < n_instances; i++) {
 			coeffs = Eigen::Map<Eigen::Matrix<double, 3, 10>>(data + 30 * i);
 			solutions.setZero();
-			int n_sols = re3q3(coeffs, &solutions);
+			int n_sols = re3q3::re3q3(coeffs, &solutions);
 			output_matrix.block(0, i * 8, 3, n_sols) = solutions.block(0,0,3,n_sols);
 		}
 	}
