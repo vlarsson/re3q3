@@ -7,5 +7,7 @@ The function takes a 3x10 matrix corresponding to the coefficients of the three 
 There is also a mex-interface for matlab in re3q3_mex.cpp which can be compiled by running
 > mex('-I/usr/include/eigen3','re3q3_mex.cc','re3q3/re3q3.cc','re3q3/sturm8.cc')
 
+For examples of how to use the library see [PoseLib](https://github.com/vlarsson/PoseLib).
+
 ## License
 re3q3 is licensed under the BSD 3-Clause license. Please see [License](https://github.com/vlarsson/re3q3/blob/master/LICENSE) for details.
