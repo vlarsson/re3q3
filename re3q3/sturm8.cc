@@ -175,7 +175,7 @@ void ridders_method_newton(const double fvec[17], double a, double b, double roo
 }
 
 void isolate_roots(const double fvec[17], const double svec[24], double a, double b, int sa, int sb, double roots[8], int &n_roots, double tol, int depth) {
-  if (depth > 60)
+  if (depth > 30)
     return;
 
   int n_rts = sa - sb;

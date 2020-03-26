@@ -55,6 +55,4 @@ void rotation_to_3q3(const Eigen::Matrix<double, 3, 10> &Rcoeffs, Eigen::Matrix<
 
 void cayley_param(const Eigen::Matrix<double, 3, 1> &c, Eigen::Matrix<double, 3, 3> *R);
 
-void refine_3q3(const Eigen::Matrix<double, 3, 10> & coeffs, Eigen::Vector3d& sol, int iters);
-
 } // namespace re3q3
