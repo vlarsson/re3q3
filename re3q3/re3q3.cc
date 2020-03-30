@@ -29,7 +29,6 @@
 #include "re3q3.h"
 #include "sturm8.h"
 #include <Eigen/Dense>
-#include <iostream>
 
 namespace re3q3 {
 
@@ -82,30 +81,40 @@ void cayley_param(const Eigen::Matrix<double, 3, 1> &c, Eigen::Matrix<double, 3,
     *R /= 1 + c(0) * c(0) + c(1) * c(1) + c(2) * c(2);
 }
 
-inline void refine_3q3(const Eigen::Matrix<double, 3, 10> &coeffs, Eigen::Vector3d &sol) {
+inline void refine_3q3(const Eigen::Matrix<double, 3, 10> &coeffs, Eigen::Matrix<double, 3, 8> *solutions, int n_sols) {
     Eigen::Matrix3d J;
     Eigen::Vector3d r;
     Eigen::Vector3d dx;
+    double x, y, z;
 
-    double &x = sol(0);
-    double &y = sol(1);
-    double &z = sol(2);
+    for (int i = 0; i < n_sols; ++i) {
+        x = (*solutions)(0, i);
+        y = (*solutions)(1, i);
+        z = (*solutions)(2, i);
 
-    // [x^2, x*y, x*z, y^2, y*z, z^2, x, y, z, 1.0]
-    for (int iter = 0; iter < 5; ++iter) {
-        r = coeffs.col(0) * x * x + coeffs.col(1) * x * y + coeffs.col(2) * x * z + coeffs.col(3) * y * y +
-            coeffs.col(4) * y * z + coeffs.col(5) * z * z + coeffs.col(6) * x + coeffs.col(7) * y +
-            coeffs.col(8) * z + coeffs.col(9);
+        // [x^2, x*y, x*z, y^2, y*z, z^2, x, y, z, 1.0]
+        for (int iter = 0; iter < 5; ++iter) {
+            r = coeffs.col(0) * x * x + coeffs.col(1) * x * y + coeffs.col(2) * x * z + coeffs.col(3) * y * y +
+                coeffs.col(4) * y * z + coeffs.col(5) * z * z + coeffs.col(6) * x + coeffs.col(7) * y +
+                coeffs.col(8) * z + coeffs.col(9);
 
-        if (r.cwiseAbs().maxCoeff() < 1e-12)
-            break;
+            if (r.cwiseAbs().maxCoeff() < 1e-8)
+                break;
 
-        J.col(0) = 2.0 * coeffs.col(0) * x + coeffs.col(1) * y + coeffs.col(2) * z + coeffs.col(6);
-        J.col(1) = coeffs.col(1) * x + 2.0 * coeffs.col(3) * y + coeffs.col(4) * z + coeffs.col(7);
-        J.col(2) = coeffs.col(2) * x + coeffs.col(4) * y + 2.0 * coeffs.col(5) * z + coeffs.col(8);
+            J.col(0) = 2.0 * coeffs.col(0) * x + coeffs.col(1) * y + coeffs.col(2) * z + coeffs.col(6);
+            J.col(1) = coeffs.col(1) * x + 2.0 * coeffs.col(3) * y + coeffs.col(4) * z + coeffs.col(7);
+            J.col(2) = coeffs.col(2) * x + coeffs.col(4) * y + 2.0 * coeffs.col(5) * z + coeffs.col(8);
 
-        dx = J.inverse() * r;
-        sol -= dx;
+            dx = J.inverse() * r;
+
+            x -= dx(0);
+            y -= dx(1);
+            z -= dx(2);
+        }
+
+        (*solutions)(0, i) = x;
+        (*solutions)(1, i) = y;
+        (*solutions)(2, i) = z;
     }
 }
 
@@ -157,11 +166,11 @@ int re3q3(const Eigen::Matrix<double, 3, 10> &coeffs, Eigen::Matrix<double, 3, 8
 
         // Revert change of variables
         for (int k = 0; k < n_sols; k++) {
-            Eigen::Vector3d sol = A.block<3, 3>(0, 0) * solutions->col(k) + A.col(3);
-            // In some cases the numerics are quite poor after the change of variables, so we do some newton steps with the original coefficients.
-            refine_3q3(coeffs, sol);
-            solutions->col(k) = sol;
+            solutions->col(k) = A.block<3, 3>(0, 0) * solutions->col(k) + A.col(3);
         }
+
+        // In some cases the numerics are quite poor after the change of variables, so we do some newton steps with the original coefficients.
+        refine_3q3(coeffs, solutions, n_sols);
 
         return n_sols;
     }
@@ -272,6 +281,8 @@ int re3q3(const Eigen::Matrix<double, 3, 10> &coeffs, Eigen::Matrix<double, 3, 8
     } else if (elim_var == 2) {
         solutions->row(0).swap(solutions->row(2));
     }
+
+    refine_3q3(coeffs, solutions, n_roots);
 
     return n_roots;
 }
