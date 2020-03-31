@@ -159,6 +159,115 @@ bool benchmark_random_coeffs() {
 	return q99 < -6;
 }
 
+
+bool benchmark_degen_rotation_homogeneous() {
+
+	std::vector<double> residuals;
+	residuals.reserve(10000 * 8);
+
+	Eigen::Matrix<double, 3, 10> coeffs;
+	Eigen::Matrix<double, 3, 9> Rcoeffs;
+	Eigen::Matrix<double, 4, 8> solutions;
+
+	for (int iter = 0; iter < 10000; ++iter) {
+
+		// Generate random 180 degree rotation
+		Eigen::Quaterniond q_gt;
+		q_gt.coeffs().setRandom();
+		q_gt.coeffs()(0) = 0.0;
+		q_gt.coeffs().normalize();
+
+		// Problem is x1'*R*x2 = 0
+		// => kron(x2',x1') * vec(R) = 0
+
+		for (int i = 0; i < 3; ++i) {
+			Eigen::Vector3d x1, x2, v;
+			x2.setRandom().normalize();
+			v.setRandom();
+			x1 = v.cross(q_gt.toRotationMatrix() * x2).normalized();
+
+			Rcoeffs.row(i) << x2(0) * x1.transpose(), x2(1)* x1.transpose(), x2(2)* x1.transpose();
+		}
+
+		
+		int n_sols = re3q3::re3q3_rotation(Rcoeffs, &solutions);
+		
+		double res = 1.0;		
+		for (int i = 0; i < n_sols; ++i) {			
+			Eigen::Vector4d q = solutions.col(i);
+			Eigen::Matrix3d R = Eigen::Quaterniond(q).toRotationMatrix();			
+			res = std::min(res, (R - q_gt.toRotationMatrix()).norm());
+		}
+		residuals.push_back(std::log10(res));
+	}
+
+
+	std::sort(residuals.begin(), residuals.end());
+
+	double q90 = residuals[static_cast<int>(residuals.size() * 0.90)];
+	double q95 = residuals[static_cast<int>(residuals.size() * 0.95)];
+	double q99 = residuals[static_cast<int>(residuals.size() * 0.99)];
+
+
+	std::cout << "q90: " << q90 << ", q95: " << q95 << ", q99: " << q99 << "\n";
+
+	return q99 < -6;
+}
+
+
+bool benchmark_degen_rotation_inhomogeneous() {
+
+	std::vector<double> residuals;
+	residuals.reserve(10000 * 8);
+
+	Eigen::Matrix<double, 3, 10> coeffs;
+	Eigen::Matrix<double, 3, 10> Rcoeffs;
+	Eigen::Matrix<double, 4, 8> solutions;
+
+	for (int iter = 0; iter < 10000; ++iter) {
+
+		// Generate random 180 degree rotation
+		Eigen::Quaterniond q_gt;
+		q_gt.coeffs().setRandom();
+		q_gt.coeffs()(0) = 0.0;
+		q_gt.coeffs().normalize();
+
+		// Problem is x1'*R*x2 = d
+		// => kron(x2',x1') * vec(R) = d
+
+		for (int i = 0; i < 3; ++i) {
+			Eigen::Vector3d x1, x2, v;
+			x2.setRandom().normalize();
+			x1.setRandom().normalize();
+			double d = -x1.dot(q_gt.toRotationMatrix() * x2);
+			Rcoeffs.row(i) << x2(0) * x1.transpose(), x2(1)* x1.transpose(), x2(2)* x1.transpose(), d;
+		}
+
+
+		int n_sols = re3q3::re3q3_rotation(Rcoeffs, &solutions);
+
+		double res = 1.0;
+		for (int i = 0; i < n_sols; ++i) {
+			Eigen::Vector4d q = solutions.col(i);
+			Eigen::Matrix3d R = Eigen::Quaterniond(q).toRotationMatrix();
+			res = std::min(res, (R - q_gt.toRotationMatrix()).norm());
+		}
+		residuals.push_back(std::log10(res));
+	}
+
+
+	std::sort(residuals.begin(), residuals.end());
+
+	double q90 = residuals[static_cast<int>(residuals.size() * 0.90)];
+	double q95 = residuals[static_cast<int>(residuals.size() * 0.95)];
+	double q99 = residuals[static_cast<int>(residuals.size() * 0.99)];
+
+
+	std::cout << "q90: " << q90 << ", q95: " << q95 << ", q99: " << q99 << "\n";
+
+	return q99 < -6;
+}
+
 int main() {
 	
 	unsigned int seed = (unsigned int)time(0);		
@@ -176,6 +285,8 @@ int main() {
 	TEST(test_degenerate_for_xy);
 	TEST(test_pure_squares);
 	TEST(benchmark_random_coeffs);
+	TEST(benchmark_degen_rotation_homogeneous);
+	TEST(benchmark_degen_rotation_inhomogeneous);
 
 	std::cout << "\nDone! Passed " << passed << "/" << num_tests << " tests.\n";
 }

@@ -287,4 +287,38 @@ int re3q3(const Eigen::Matrix<double, 3, 10> &coeffs, Eigen::Matrix<double, 3, 8
     return n_roots;
 }
 
+inline int re3q3_rotation_impl(Eigen::Matrix<double, 3, 10>& Rcoeffs, Eigen::Matrix<double, 4, 8>* solutions, bool try_random_var_change) {
+    Eigen::Quaterniond q0 = Eigen::Quaterniond::UnitRandom();
+    Eigen::Matrix3d R0 = q0.toRotationMatrix();
+    Rcoeffs.block<3, 3>(0, 0) = Rcoeffs.block<3, 3>(0, 0) * R0;
+    Rcoeffs.block<3, 3>(0, 3) = Rcoeffs.block<3, 3>(0, 3) * R0;
+    Rcoeffs.block<3, 3>(0, 6) = Rcoeffs.block<3, 3>(0, 6) * R0;
+
+    Eigen::Matrix<double, 3, 10> coeffs;
+    rotation_to_3q3(Rcoeffs, &coeffs);
+
+    Eigen::Matrix<double, 3, 8> solutions_cayley;
+    int n_sols = re3q3(coeffs, &solutions_cayley, try_random_var_change);
+
+    for (int i = 0; i < n_sols; ++i) {
+        Eigen::Quaterniond q{1.0, solutions_cayley(0,i), solutions_cayley(1,i), solutions_cayley(2,i)};
+        q.normalize();
+        q = q0 * q;        
+        solutions->col(i) = q.coeffs();
+    }
+    return n_sols;
+}
+
+int re3q3_rotation(const Eigen::Matrix<double, 3, 9>& Rcoeffs, Eigen::Matrix<double, 4, 8>* solutions, bool try_random_var_change) {
+    Eigen::Matrix<double, 3, 10> Rcoeffs_copy;
+    Rcoeffs_copy.block<3, 9>(0, 0) = Rcoeffs;
+    Rcoeffs_copy.block<3, 1>(0, 9).setZero();
+    return re3q3_rotation_impl(Rcoeffs_copy, solutions, try_random_var_change);
+}
+int re3q3_rotation(const Eigen::Matrix<double, 3, 10>& Rcoeffs, Eigen::Matrix<double, 4, 8>* solutions, bool try_random_var_change) {
+    Eigen::Matrix<double, 3, 10> Rcoeffs_copy = Rcoeffs;
+    return re3q3_rotation_impl(Rcoeffs_copy, solutions, try_random_var_change);
+}
+
+
 } // namespace re3q3

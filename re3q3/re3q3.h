@@ -54,4 +54,14 @@ void rotation_to_3q3(const Eigen::Matrix<double, 3, 10> &Rcoeffs, Eigen::Matrix<
 
 void cayley_param(const Eigen::Matrix<double, 3, 1> &c, Eigen::Matrix<double, 3, 3> *R);
 
+
+/*
+    Helper functions which performs a random rotation to avoid the degeneracy with cayley transform.
+    The solutions matrix is 4x8 and contains quaternions. To get back rotation matrices you can use
+        Eigen::Quaterniond(solutions.col(i)).toRotationMatrix();
+*/
+int re3q3_rotation(const Eigen::Matrix<double, 3, 9>& Rcoeffs, Eigen::Matrix<double, 4, 8>* solutions, bool try_random_var_change = true);
+int re3q3_rotation(const Eigen::Matrix<double, 3, 10>& Rcoeffs, Eigen::Matrix<double, 4, 8>* solutions, bool try_random_var_change = true);
+
+
 } // namespace re3q3
